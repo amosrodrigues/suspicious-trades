@@ -9,10 +9,7 @@ import { Flex, Surface } from "@dynatrace/strato-components/layouts"
 import { Modal } from "@dynatrace/strato-components/overlays"
 import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
 
-import {
-  buildDepositsTotalQuery,
-  buildOverviewQuery
-} from "../../utils/dql-queries"
+import { buildOverviewQuery } from "../../utils/dql-queries"
 import { getNumericValue } from "../../utils/formatters"
 
 type OverviewRecord = {
@@ -49,7 +46,6 @@ export const TradesOverviewPanel = ({
     timeframeDays,
     suspiciousTradeThreshold
   )
-  const depositsQuery = buildDepositsTotalQuery(timeframeDays)
   const { data, error, isLoading } = useDql<OverviewRecord>({
     query: overviewQuery,
     maxResultRecords: 1
@@ -78,7 +74,7 @@ export const TradesOverviewPanel = ({
               type="button"
               variant="default"
               onClick={() => setIsQueryOpen(true)}>
-              View deposits DQL
+              View Query
             </Button>
           </Flex>
 
@@ -112,7 +108,7 @@ export const TradesOverviewPanel = ({
 
       {isQueryOpen && (
         <Modal
-          title="DQL: total deposits"
+          title="DQL: EasyTrade overview"
           show
           onDismiss={() => setIsQueryOpen(false)}
           dismissible
@@ -126,7 +122,7 @@ export const TradesOverviewPanel = ({
             </Button>
           }>
           <CodeSnippet language="dql" showLineNumbers={false}>
-            {depositsQuery.trim()}
+            {overviewQuery.trim()}
           </CodeSnippet>
         </Modal>
       )}
