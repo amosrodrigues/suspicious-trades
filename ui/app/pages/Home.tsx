@@ -68,18 +68,18 @@ export const Home = () => {
 
   return (
     <Flex flexDirection="column" gap={24} padding={32}>
-      <UserSearchPanel
-        suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
-        queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
-        onSearch={handleSearch}
-      />
-
       {!submittedEmail && (
         <TradesOverviewPanel
           suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
           timeframeDays={QUERY_TIMEFRAME_DAYS}
         />
       )}
+
+      <UserSearchPanel
+        suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
+        queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
+        onSearch={handleSearch}
+      />
 
       <TransactionsTablePanel
         submittedEmail={submittedEmail}
