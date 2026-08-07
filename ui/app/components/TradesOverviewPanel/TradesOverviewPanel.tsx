@@ -35,10 +35,16 @@ const OverviewMetric = ({
     padding={20}
     style={{
       background,
+      display: "flex",
       flex: "1 1 200px",
       minHeight: 128
     }}>
-    <Flex flexDirection="column" gap={8}>
+    <Flex
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      gap={8}
+      style={{ flex: 1, height: "100%", textAlign: "center" }}>
       <Paragraph>{label}</Paragraph>
       <Heading level={2} style={{ color: valueColor }}>
         {value.toLocaleString()}
