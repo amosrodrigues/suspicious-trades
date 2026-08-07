@@ -1,10 +1,8 @@
 import React, { useState } from "react"
 import { useDql } from "@dynatrace-sdk/react-hooks"
 import { Button } from "@dynatrace/strato-components/buttons"
-import {
-  CodeSnippet,
-  MessageContainer
-} from "@dynatrace/strato-components/content"
+import { MessageContainer } from "@dynatrace/strato-components/content"
+import { DQLEditor } from "@dynatrace/strato-components/editors"
 import { Flex, Surface } from "@dynatrace/strato-components/layouts"
 import { Modal } from "@dynatrace/strato-components/overlays"
 import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
@@ -121,9 +119,14 @@ export const TradesOverviewPanel = ({
               Close
             </Button>
           }>
-          <CodeSnippet language="dql" showLineNumbers={false}>
-            {overviewQuery.trim()}
-          </CodeSnippet>
+          <DQLEditor
+            aria-label="EasyTrade overview DQL query"
+            value={overviewQuery.trim()}
+            readOnly
+            lineWrap
+            size="condensed"
+            style={{ height: 320 }}
+          />
         </Modal>
       )}
     </>
