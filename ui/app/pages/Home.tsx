@@ -7,6 +7,7 @@ import { buildUserQuery } from "../utils/dql-queries"
 import { UserSearchPanel } from "../components/UserSearchPanel/UserSearchPanel"
 import { TransactionsTablePanel } from "../components/TransactionsTablePanel/TransactionsTablePanel"
 import { CandidateUsersPanel } from "../components/CandidateUsersPanel/CandidateUsersPanel"
+import { TradesOverviewPanel } from "../components/TradesOverviewPanel/TradesOverviewPanel"
 
 // CONFIGURATION CONSTANTS
 const SUSPICIOUS_TRADE_THRESHOLD = 1000
@@ -72,6 +73,13 @@ export const Home = () => {
         queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
         onSearch={handleSearch}
       />
+
+      {!submittedEmail && (
+        <TradesOverviewPanel
+          suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
+          timeframeDays={QUERY_TIMEFRAME_DAYS}
+        />
+      )}
 
       <TransactionsTablePanel
         submittedEmail={submittedEmail}

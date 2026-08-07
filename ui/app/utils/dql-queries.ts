@@ -24,3 +24,22 @@ export const buildCandidateUsersQuery = (timeframeDays: number) => `
   | fields email, amount
   | limit 5000
 `
+
+export const buildOverviewQuery = (
+  timeframeDays: number,
+  suspiciousTradeThreshold: number
+) => `
+  fetch bizevents, from: now() - ${timeframeDays}d
+  | filter event.type == "com.easytrade.deposit.start" or event.type == "com.easytrade.withdraw.start"
+  | summarize {
+      deposits = countIf(event.type == "com.easytrade.deposit.start"),
+      withdrawals = countIf(event.type == "com.easytrade.withdraw.start"),
+      suspiciousTrades = countIf(amount > ${suspiciousTradeThreshold})
+    }
+`
+
+export const buildDepositsTotalQuery = (timeframeDays: number) => `
+  fetch bizevents, from: now() - ${timeframeDays}d
+  | filter event.type == "com.easytrade.deposit.start"
+  | summarize deposits = count()
+`

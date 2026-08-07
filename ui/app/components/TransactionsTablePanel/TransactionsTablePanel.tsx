@@ -11,6 +11,7 @@ import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
 import { Tabs, Tab } from "@dynatrace/strato-components/navigation"
 import { _Drawer as Drawer } from "@dynatrace/strato-components/overlays"
 import { XmarkIcon } from "@dynatrace/strato-icons"
+import colors from "@dynatrace/strato-design-tokens/colors"
 
 import {
   formatCurrency,
@@ -333,12 +334,13 @@ export const TransactionsTablePanel = ({
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
+                  color: colors.Theme.Foreground["10"],
                   display: "inline-flex",
                   height: 32,
                   justifyContent: "center",
                   width: 32
                 }}>
-                <XmarkIcon />
+                <XmarkIcon style={{ color: "currentColor" }} />
               </button>
             </Flex>
 
