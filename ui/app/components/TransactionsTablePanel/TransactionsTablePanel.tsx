@@ -43,6 +43,9 @@ type Coordinates = {
   longitude: number
 }
 
+const MAP_ZOOM = 10
+const TILE_SIZE = 256
+
 const DetailItem = ({ label, value }: DetailItemProps) => (
   <Flex flexDirection="column" gap={4} style={{ minWidth: 140 }}>
     <Paragraph>{label}</Paragraph>
@@ -55,6 +58,80 @@ const maskCardNumber = (value: string) =>
 
 const getLocationQuery = (city: string, country: string) =>
   [city, country].filter(Boolean).join(", ")
+
+const getTilePosition = ({ latitude, longitude }: Coordinates) => {
+  const tileCount = 2 ** MAP_ZOOM
+  const latitudeInRadians = (latitude * Math.PI) / 180
+  const x = ((longitude + 180) / 360) * tileCount
+  const y =
+    ((1 - Math.asinh(Math.tan(latitudeInRadians)) / Math.PI) / 2) *
+    tileCount
+
+  return { x, y, tileCount }
+}
+
+const MapPreview = ({ coordinates }: { coordinates: Coordinates }) => {
+  const { x, y, tileCount } = getTilePosition(coordinates)
+  const centerTileX = Math.floor(x)
+  const centerTileY = Math.floor(y)
+  const tiles = [-1, 0, 1].flatMap((row) =>
+    [-1, 0, 1].map((column) => {
+      const tileX = (centerTileX + column + tileCount) % tileCount
+      const tileY = Math.min(Math.max(centerTileY + row, 0), tileCount - 1)
+
+      return {
+        id: `${tileX}-${tileY}`,
+        url: `https://tile.openstreetmap.org/${MAP_ZOOM}/${tileX}/${tileY}.png`
+      }
+    })
+  )
+  const markerLeft = ((1 + (x - centerTileX)) / 3) * 100
+  const markerTop = ((1 + (y - centerTileY)) / 3) * 100
+
+  return (
+    <Flex flexDirection="column" gap={8}>
+      <div
+        aria-label="Map showing the transaction location"
+        role="img"
+        style={{
+          background: "#e6e6e6",
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          maxWidth: TILE_SIZE * 3,
+          overflow: "hidden",
+          position: "relative",
+          width: "100%"
+        }}>
+        {tiles.map((tile) => (
+          <img
+            alt=""
+            height={TILE_SIZE}
+            key={tile.id}
+            src={tile.url}
+            width={TILE_SIZE}
+            style={{ display: "block", height: "auto", width: "100%" }}
+          />
+        ))}
+        <span
+          aria-hidden="true"
+          style={{
+            background: colors.Theme.Critical["70"],
+            border: "2px solid white",
+            borderRadius: "50% 50% 50% 0",
+            boxShadow: "0 1px 4px rgba(0, 0, 0, 0.45)",
+            height: 18,
+            left: `${markerLeft}%`,
+            position: "absolute",
+            top: `${markerTop}%`,
+            transform: "translate(-50%, -100%) rotate(-45deg)",
+            width: 18
+          }}
+        />
+      </div>
+      <Paragraph>Map data © OpenStreetMap contributors</Paragraph>
+    </Flex>
+  )
+}
 
 const LocationTab = ({
   city,
@@ -76,10 +153,6 @@ const LocationTab = ({
       autoFetchOnUpdate: true
     }
   )
-
-  const mapUrl = coordinates
-    ? `https://www.openstreetmap.org/export/embed.html?bbox=${coordinates.longitude - 0.12}%2C${coordinates.latitude - 0.08}%2C${coordinates.longitude + 0.12}%2C${coordinates.latitude + 0.08}&layer=mapnik&marker=${coordinates.latitude}%2C${coordinates.longitude}`
-    : ""
 
   return (
     <Flex flexDirection="column" gap={16} paddingTop={16}>
@@ -116,18 +189,7 @@ const LocationTab = ({
         </MessageContainer>
       )}
 
-      {mapUrl && (
-        <Flex flexDirection="column" gap={8}>
-          <iframe
-            title={`Map of ${locationQuery}`}
-            src={mapUrl}
-            style={{ border: "none", height: 280, width: "100%" }}
-          />
-          <Paragraph>
-            Map data © OpenStreetMap contributors
-          </Paragraph>
-        </Flex>
-      )}
+      {coordinates && <MapPreview coordinates={coordinates} />}
     </Flex>
   )
 }

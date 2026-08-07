@@ -3,9 +3,17 @@
   "environmentUrl": "https://ier41135.apps.dynatrace.com/",
   "app": {
     "name": "suspicious-trades",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "description": "A suspicious trade verification app for EasyTrade business events",
     "id": "my.suspicious.trades",
+    "csp": {
+      "img-src": [
+        {
+          "value": "https://tile.openstreetmap.org",
+          "comment": "Display OpenStreetMap tiles in the transaction location map."
+        }
+      ]
+    },
     "scopes": [
       {
         "name": "storage:bizevents:read",
