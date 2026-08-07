@@ -325,7 +325,6 @@ interface TransactionsTablePanelProps {
   error?: Error | null
   isLoading: boolean
   suspiciousTradeThreshold: number
-  queryTimeframeDays: number
 }
 
 export const TransactionsTablePanel = ({
@@ -333,8 +332,7 @@ export const TransactionsTablePanel = ({
   data,
   error,
   isLoading,
-  suspiciousTradeThreshold,
-  queryTimeframeDays
+  suspiciousTradeThreshold
 }: TransactionsTablePanelProps) => {
   const [selectedTab, setSelectedTab] = useState<
     "all" | "deposit" | "withdrawal" | "suspicious"
@@ -453,7 +451,7 @@ export const TransactionsTablePanel = ({
       {submittedEmail && !isLoading && !error && (
         <Surface elevation="flat" padding={24} style={{ borderRadius: 16 }}>
           <Flex alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={12}>
-            <Paragraph>Results for <strong>{submittedEmail}</strong> in the last {queryTimeframeDays} days.</Paragraph>
+            <Paragraph>Results for <strong>{submittedEmail}</strong> in the selected timeframe.</Paragraph>
             <Flex gap={8} flexWrap="wrap">
               <Chip color="neutral" variant="accent" size="condensed">{totalCount} trades</Chip>
               <Chip color="critical" variant="accent" size="condensed">{suspiciousCount} suspicious</Chip>

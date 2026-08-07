@@ -7,13 +7,11 @@ import { formatCurrency } from "../../utils/formatters"
 
 interface UserSearchPanelProps {
   suspiciousTradeThreshold: number
-  queryTimeframeDays: number
   onSearch: (email: string) => void
 }
 
 export const UserSearchPanel = ({
   suspiciousTradeThreshold,
-  queryTimeframeDays,
   onSearch
 }: UserSearchPanelProps) => {
   const [email, setEmail] = useState("")
@@ -33,7 +31,7 @@ export const UserSearchPanel = ({
         <Heading level={1}>Suspicious Trade Checker</Heading>
         <Paragraph>
           Search EasyTrade users by email and review deposits and withdrawals
-          from the last {queryTimeframeDays} days. Trades over{" "}
+          in the selected timeframe. Trades over{" "}
           {formatCurrency(suspiciousTradeThreshold)} are flagged as suspicious.
         </Paragraph>
       </Flex>

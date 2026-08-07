@@ -3,7 +3,10 @@ import React, { useState } from "react"
 import { useDql } from "@dynatrace-sdk/react-hooks"
 import { Flex } from "@dynatrace/strato-components/layouts"
 
-import { buildUserQuery } from "../utils/dql-queries"
+import {
+  buildUserQuery,
+  type QueryTimeframe
+} from "../utils/dql-queries"
 import { UserSearchPanel } from "../components/UserSearchPanel/UserSearchPanel"
 import { TransactionsTablePanel } from "../components/TransactionsTablePanel/TransactionsTablePanel"
 import { CandidateUsersPanel } from "../components/CandidateUsersPanel/CandidateUsersPanel"
@@ -12,7 +15,10 @@ import { EasyTradeDashboardsPanel } from "../components/EasyTradeDashboardsPanel
 
 // CONFIGURATION CONSTANTS
 const SUSPICIOUS_TRADE_THRESHOLD = 1000
-const QUERY_TIMEFRAME_DAYS = 30
+const DEFAULT_TIMEFRAME: QueryTimeframe = {
+  from: "now-30d",
+  to: "now"
+}
 
 export type TransactionQueryRecord = {
   [key: string]: unknown
@@ -43,8 +49,9 @@ export type TransactionQueryRecord = {
 
 export const Home = () => {
   const [submittedEmail, setSubmittedEmail] = useState("")
+  const [timeframe, setTimeframe] = useState<QueryTimeframe>(DEFAULT_TIMEFRAME)
 
-  const activeQuery = buildUserQuery(submittedEmail, QUERY_TIMEFRAME_DAYS)
+  const activeQuery = buildUserQuery(submittedEmail, timeframe)
   const { data, error, isLoading, forceRefetch } =
     useDql<TransactionQueryRecord>(
       { query: activeQuery, maxResultRecords: 5000 },
@@ -69,16 +76,14 @@ export const Home = () => {
 
   return (
     <Flex flexDirection="column" gap={24} padding={32}>
-      {!submittedEmail && (
-        <TradesOverviewPanel
-          suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
-          timeframeDays={QUERY_TIMEFRAME_DAYS}
-        />
-      )}
+      <TradesOverviewPanel
+        suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
+      />
 
       <UserSearchPanel
         suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
-        queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
         onSearch={handleSearch}
       />
 
@@ -88,12 +93,11 @@ export const Home = () => {
         error={error}
         isLoading={isLoading}
         suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
-        queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
       />
 
       <CandidateUsersPanel
         suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
-        queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
+        timeframe={timeframe}
         onSearch={handleSearch}
       />
 

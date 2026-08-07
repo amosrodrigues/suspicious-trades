@@ -15,7 +15,10 @@ import {
   getStringValue,
   paddedCell
 } from "../../utils/formatters"
-import { buildCandidateUsersQuery } from "../../utils/dql-queries"
+import {
+  buildCandidateUsersQuery,
+  type QueryTimeframe
+} from "../../utils/dql-queries"
 
 type CandidateQueryRecord = {
   email?: string
@@ -30,19 +33,19 @@ type CandidateUserRow = {
 
 interface CandidateUsersPanelProps {
   suspiciousTradeThreshold: number
-  queryTimeframeDays: number
+  timeframe: QueryTimeframe
   onSearch: (email: string) => void
 }
 
 export const CandidateUsersPanel = ({
   suspiciousTradeThreshold,
-  queryTimeframeDays,
+  timeframe,
   onSearch
 }: CandidateUsersPanelProps) => {
   const [showCandidateUsers, setShowCandidateUsers] = useState(false)
 
   const candidateQuery = buildCandidateUsersQuery(
-    queryTimeframeDays,
+    timeframe,
     suspiciousTradeThreshold
   )
 
@@ -139,8 +142,8 @@ export const CandidateUsersPanel = ({
         </Flex>
         <Paragraph>
           Search globally for EasyTrade users with transactions over{" "}
-          {formatCurrency(suspiciousTradeThreshold)} in the last{" "}
-          {queryTimeframeDays} days. Use an email from this list for testing.
+          {formatCurrency(suspiciousTradeThreshold)} in the selected timeframe.
+          Use an email from this list for testing.
         </Paragraph>
 
         {isCandidateLoading && (
@@ -186,8 +189,8 @@ export const CandidateUsersPanel = ({
                 </MessageContainer.Title>
                 <MessageContainer.Description>
                   There are no users with transactions above{" "}
-                  {formatCurrency(suspiciousTradeThreshold)} in the last{" "}
-                  {queryTimeframeDays} days.
+                  {formatCurrency(suspiciousTradeThreshold)} in the selected
+                  timeframe.
                 </MessageContainer.Description>
               </MessageContainer>
             )}
