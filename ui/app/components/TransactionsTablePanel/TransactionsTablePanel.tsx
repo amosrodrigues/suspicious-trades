@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useAppFunction, type TypedQueryResult } from "@dynatrace-sdk/react-hooks"
 import { Chip, MessageContainer } from "@dynatrace/strato-components/content"
 import {
@@ -44,7 +44,11 @@ type Coordinates = {
 }
 
 const MAP_ZOOM = 10
+const MIN_MAP_ZOOM = 3
+const MAX_MAP_ZOOM = 16
 const TILE_SIZE = 256
+const MAP_WIDTH = TILE_SIZE * 3
+const MAP_HEIGHT = TILE_SIZE * 2
 
 const DetailItem = ({ label, value }: DetailItemProps) => (
   <Flex flexDirection="column" gap={4} style={{ minWidth: 140 }}>
@@ -59,8 +63,8 @@ const maskCardNumber = (value: string) =>
 const getLocationQuery = (city: string, country: string) =>
   [city, country].filter(Boolean).join(", ")
 
-const getTilePosition = ({ latitude, longitude }: Coordinates) => {
-  const tileCount = 2 ** MAP_ZOOM
+const getTilePosition = ({ latitude, longitude }: Coordinates, zoom: number) => {
+  const tileCount = 2 ** zoom
   const latitudeInRadians = (latitude * Math.PI) / 180
   const x = ((longitude + 180) / 360) * tileCount
   const y =
@@ -70,36 +74,135 @@ const getTilePosition = ({ latitude, longitude }: Coordinates) => {
   return { x, y, tileCount }
 }
 
+const getCoordinatesFromTilePosition = (
+  x: number,
+  y: number,
+  zoom: number
+): Coordinates => {
+  const tileCount = 2 ** zoom
+  const wrappedX = ((x % tileCount) + tileCount) % tileCount
+  const clampedY = Math.min(Math.max(y, 0), tileCount)
+
+  return {
+    latitude:
+      (Math.atan(Math.sinh(Math.PI * (1 - (2 * clampedY) / tileCount))) *
+        180) /
+      Math.PI,
+    longitude: (wrappedX / tileCount) * 360 - 180
+  }
+}
+
+type DragStart = {
+  clientX: number
+  clientY: number
+  center: Coordinates
+}
+
 const MapPreview = ({ coordinates }: { coordinates: Coordinates }) => {
-  const { x, y, tileCount } = getTilePosition(coordinates)
-  const centerTileX = Math.floor(x)
-  const centerTileY = Math.floor(y)
-  const tiles = [-1, 0, 1].flatMap((row) =>
-    [-1, 0, 1].map((column) => {
+  const [center, setCenter] = useState(coordinates)
+  const [zoom, setZoom] = useState(MAP_ZOOM)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartRef = useRef<DragStart | null>(null)
+  const { x: centerX, y: centerY, tileCount } = getTilePosition(center, zoom)
+  const { x: markerX, y: markerY } = getTilePosition(coordinates, zoom)
+  const centerTileX = Math.floor(centerX)
+  const centerTileY = Math.floor(centerY)
+  const tiles = [-2, -1, 0, 1, 2].flatMap((row) =>
+    [-2, -1, 0, 1, 2].map((column) => {
       const tileX = (centerTileX + column + tileCount) % tileCount
       const tileY = Math.min(Math.max(centerTileY + row, 0), tileCount - 1)
 
       return {
-        id: `${tileX}-${tileY}`,
-        url: `https://tile.openstreetmap.org/${MAP_ZOOM}/${tileX}/${tileY}.png`
+        id: `${zoom}-${tileX}-${tileY}`,
+        left: 50 + ((centerTileX + column - centerX) * TILE_SIZE * 100) / MAP_WIDTH,
+        top: 50 + ((centerTileY + row - centerY) * TILE_SIZE * 100) / MAP_HEIGHT,
+        url: `https://tile.openstreetmap.org/${zoom}/${tileX}/${tileY}.png`
       }
     })
   )
-  const markerLeft = ((1 + (x - centerTileX)) / 3) * 100
-  const markerTop = ((1 + (y - centerTileY)) / 3) * 100
+  const markerLeft = 50 + ((markerX - centerX) * TILE_SIZE * 100) / MAP_WIDTH
+  const markerTop = 50 + ((markerY - centerY) * TILE_SIZE * 100) / MAP_HEIGHT
+
+  useEffect(() => {
+    setCenter(coordinates)
+    setZoom(MAP_ZOOM)
+  }, [coordinates])
+
+  const adjustZoom = (amount: number) => {
+    setZoom((currentZoom) =>
+      Math.min(Math.max(currentZoom + amount, MIN_MAP_ZOOM), MAX_MAP_ZOOM)
+    )
+  }
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    dragStartRef.current = {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      center
+    }
+    setIsDragging(true)
+  }
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const dragStart = dragStartRef.current
+    if (!dragStart) return
+
+    const startPosition = getTilePosition(dragStart.center, zoom)
+    const deltaX = ((event.clientX - dragStart.clientX) * MAP_WIDTH) / event.currentTarget.clientWidth
+    const deltaY = ((event.clientY - dragStart.clientY) * MAP_HEIGHT) / event.currentTarget.clientHeight
+    setCenter(
+      getCoordinatesFromTilePosition(
+        startPosition.x - deltaX / TILE_SIZE,
+        startPosition.y - deltaY / TILE_SIZE,
+        zoom
+      )
+    )
+  }
+
+  const stopDragging = () => {
+    dragStartRef.current = null
+    setIsDragging(false)
+  }
 
   return (
     <Flex flexDirection="column" gap={8}>
+      <Flex gap={8}>
+        <button
+          aria-label="Zoom in"
+          disabled={zoom === MAX_MAP_ZOOM}
+          onClick={() => adjustZoom(1)}
+          type="button">
+          +
+        </button>
+        <button
+          aria-label="Zoom out"
+          disabled={zoom === MIN_MAP_ZOOM}
+          onClick={() => adjustZoom(-1)}
+          type="button">
+          −
+        </button>
+        <Paragraph>Scroll to zoom or drag to pan</Paragraph>
+      </Flex>
       <div
         aria-label="Map showing the transaction location"
-        role="img"
+        onPointerCancel={stopDragging}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={stopDragging}
+        onWheel={(event) => {
+          event.preventDefault()
+          adjustZoom(event.deltaY < 0 ? 1 : -1)
+        }}
+        role="application"
         style={{
           background: "#e6e6e6",
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          maxWidth: TILE_SIZE * 3,
+          aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`,
+          cursor: isDragging ? "grabbing" : "grab",
           overflow: "hidden",
           position: "relative",
+          touchAction: "none",
+          userSelect: "none",
           width: "100%"
         }}>
         {tiles.map((tile) => (
@@ -109,7 +212,16 @@ const MapPreview = ({ coordinates }: { coordinates: Coordinates }) => {
             key={tile.id}
             src={tile.url}
             width={TILE_SIZE}
-            style={{ display: "block", height: "auto", width: "100%" }}
+            style={{
+              height: `${(TILE_SIZE * 100) / MAP_HEIGHT}%`,
+              left: `${tile.left}%`,
+              maxWidth: "none",
+              pointerEvents: "none",
+              position: "absolute",
+              top: `${tile.top}%`,
+              transform: "translate(-50%, -50%)",
+              width: `${(TILE_SIZE * 100) / MAP_WIDTH}%`
+            }}
           />
         ))}
         <span
@@ -122,6 +234,7 @@ const MapPreview = ({ coordinates }: { coordinates: Coordinates }) => {
             height: 18,
             left: `${markerLeft}%`,
             position: "absolute",
+            pointerEvents: "none",
             top: `${markerTop}%`,
             transform: "translate(-50%, -100%) rotate(-45deg)",
             width: 18
