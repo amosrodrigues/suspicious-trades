@@ -1,7 +1,10 @@
 import React, { useState } from "react"
 import { useDql } from "@dynatrace-sdk/react-hooks"
 import { Button } from "@dynatrace/strato-components/buttons"
-import { CodeSnippet, MessageContainer } from "@dynatrace/strato-components/content"
+import {
+  CodeSnippet,
+  MessageContainer
+} from "@dynatrace/strato-components/content"
 import { Flex, Surface } from "@dynatrace/strato-components/layouts"
 import { Modal } from "@dynatrace/strato-components/overlays"
 import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
@@ -60,10 +63,16 @@ export const TradesOverviewPanel = ({
     <>
       <Surface elevation="raised" padding={24} style={{ borderRadius: 18 }}>
         <Flex flexDirection="column" gap={16}>
-          <Flex alignItems="center" justifyContent="space-between" gap={16} flexWrap="wrap">
+          <Flex
+            alignItems="center"
+            justifyContent="space-between"
+            gap={16}
+            flexWrap="wrap">
             <Flex flexDirection="column" gap={4}>
               <Heading level={2}>EasyTrade overview</Heading>
-              <Paragraph>Activity from the last {timeframeDays} days.</Paragraph>
+              <Paragraph>
+                Activity from the last {timeframeDays} days.
+              </Paragraph>
             </Flex>
             <Button
               type="button"
@@ -75,14 +84,27 @@ export const TradesOverviewPanel = ({
 
           {error ? (
             <MessageContainer variant="critical">
-              <MessageContainer.Title>Unable to load overview</MessageContainer.Title>
-              <MessageContainer.Description>{error.message}</MessageContainer.Description>
+              <MessageContainer.Title>
+                Unable to load overview
+              </MessageContainer.Title>
+              <MessageContainer.Description>
+                {error.message}
+              </MessageContainer.Description>
             </MessageContainer>
           ) : (
             <Flex gap={16} flexWrap="wrap">
-              <OverviewMetric label="Total deposits" value={isLoading ? 0 : deposits} />
-              <OverviewMetric label="Total withdrawals" value={isLoading ? 0 : withdrawals} />
-              <OverviewMetric label="Suspicious trades" value={isLoading ? 0 : suspiciousTrades} />
+              <OverviewMetric
+                label="Total deposits"
+                value={isLoading ? 0 : deposits}
+              />
+              <OverviewMetric
+                label="Total withdrawals"
+                value={isLoading ? 0 : withdrawals}
+              />
+              <OverviewMetric
+                label="Suspicious trades"
+                value={isLoading ? 0 : suspiciousTrades}
+              />
             </Flex>
           )}
         </Flex>
