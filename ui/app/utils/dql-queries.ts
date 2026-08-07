@@ -17,12 +17,16 @@ export const buildUserQuery = (email: string, timeframeDays: number) => {
   `
 }
 
-export const buildCandidateUsersQuery = (timeframeDays: number) => `
+export const buildCandidateUsersQuery = (
+  timeframeDays: number,
+  suspiciousTradeThreshold: number
+) => `
   fetch bizevents, from: now() - ${timeframeDays}d
-  | filter event.type == "com.easytrade.deposit.start" or event.type == "com.easytrade.withdraw.start"
-  | filter isNotNull(email)
-  | fields email, amount
-  | limit 5000
+  | filter in(event.type, "com.easytrade.deposit.start", "com.easytrade.withdraw.start")
+  | filter isNotNull(email) and amount > ${suspiciousTradeThreshold}
+  | summarize suspiciousTradeCount = count(), by: { email = lower(email) }
+  | sort suspiciousTradeCount desc
+  | limit 20
 `
 
 export const buildOverviewQuery = (

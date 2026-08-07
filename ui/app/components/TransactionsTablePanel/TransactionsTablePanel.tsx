@@ -6,11 +6,18 @@ import {
   DataTablePagination,
   type DataTableColumnDef
 } from "@dynatrace/strato-components/tables"
-import { Divider, Flex, Surface } from "@dynatrace/strato-components/layouts"
-import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
+import {
+  Divider,
+  Flex,
+  PageLayout,
+  Surface
+} from "@dynatrace/strato-components/layouts"
+import {
+  ExternalLink,
+  Heading,
+  Paragraph
+} from "@dynatrace/strato-components/typography"
 import { Tab, Tabs } from "@dynatrace/strato-components/navigation"
-import { _Drawer as Drawer } from "@dynatrace/strato-components/overlays"
-import { XmarkIcon } from "@dynatrace/strato-icons"
 import colors from "@dynatrace/strato-design-tokens/colors"
 
 import {
@@ -241,7 +248,12 @@ const MapPreview = ({ coordinates }: { coordinates: Coordinates }) => {
           }}
         />
       </div>
-      <Paragraph>Map data © OpenStreetMap contributors</Paragraph>
+      <Paragraph>
+        Map data ©{" "}
+        <ExternalLink href="https://www.openstreetmap.org/copyright">
+          OpenStreetMap contributors
+        </ExternalLink>
+      </Paragraph>
     </Flex>
   )
 }
@@ -331,7 +343,6 @@ export const TransactionsTablePanel = ({
     null
   )
   const [isDetailOpen, setIsDetailOpen] = useState(false)
-  const isClosingDetailRef = useRef(false)
 
   const transactions = useMemo<TransactionRow[]>(() => {
     const records = Array.isArray(data?.records)
@@ -395,15 +406,11 @@ export const TransactionsTablePanel = ({
   )
 
   const closeTransactionDetails = () => {
-    isClosingDetailRef.current = true
     setIsDetailOpen(false)
-    window.setTimeout(() => {
-      isClosingDetailRef.current = false
-    }, 500)
+    setActiveTransactionId(null)
   }
 
   const handleActiveRowChange = (rowId: string | null) => {
-    if (isClosingDetailRef.current) return
     setActiveTransactionId(rowId)
     setIsDetailOpen(rowId !== null)
   }
@@ -472,17 +479,26 @@ export const TransactionsTablePanel = ({
           </div>
         </Surface>
       )}
-      {isDetailOpen && selectedTransaction && (
-        <Drawer isDismissed={false} onDismiss={closeTransactionDetails} placement="right" width="50vw" aria-label="Transaction details">
+      <PageLayout.Details
+        aria-label="Transaction details"
+        collapsed={!isDetailOpen || !selectedTransaction}
+        defaultLayout="overlay"
+        defaultWidth="50%"
+        label="Resize transaction details"
+        maxWidth="70%"
+        minWidth={320}
+        onCollapsedChange={(collapsed) => {
+          if (collapsed) closeTransactionDetails()
+        }}
+        position="end">
+        {selectedTransaction && (
           <Flex flexDirection="column" gap={24} padding={24}>
-            <Flex alignItems="center" justifyContent="space-between" gap={16}>
+            <Flex alignItems="center" gap={16}>
               <Flex flexDirection="column" gap={4}>
                 <Heading level={2}>Transaction details</Heading>
                 <Paragraph>{selectedTransaction.timestamp}</Paragraph>
               </Flex>
-              <button type="button" aria-label="Close transaction details" title="Close transaction details" onClick={closeTransactionDetails} style={{ alignItems: "center", background: "transparent", border: "none", color: colors.Theme.Foreground["10"], cursor: "pointer", display: "inline-flex", height: 32, justifyContent: "center", width: 32 }}>
-                <XmarkIcon style={{ color: "currentColor" }} />
-              </button>
+              <PageLayout.Details.ControlBar aria-label="Transaction detail controls" />
             </Flex>
             <Flex alignItems="center" gap={8} flexWrap="wrap">
               <Chip color={selectedTransaction.status === "Suspicious" ? "critical" : "success"} variant="accent" size="condensed">{selectedTransaction.status}</Chip>
@@ -528,8 +544,8 @@ export const TransactionsTablePanel = ({
               </Tab>
             </Tabs>
           </Flex>
-        </Drawer>
-      )}
+        )}
+      </PageLayout.Details>
     </>
   )
 }

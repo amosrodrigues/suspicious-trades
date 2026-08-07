@@ -19,7 +19,7 @@ import { buildCandidateUsersQuery } from "../../utils/dql-queries"
 
 type CandidateQueryRecord = {
   email?: string
-  amount?: number | string
+  suspiciousTradeCount?: number | string
 }
 
 type CandidateUserRow = {
@@ -41,7 +41,10 @@ export const CandidateUsersPanel = ({
 }: CandidateUsersPanelProps) => {
   const [showCandidateUsers, setShowCandidateUsers] = useState(false)
 
-  const candidateQuery = buildCandidateUsersQuery(queryTimeframeDays)
+  const candidateQuery = buildCandidateUsersQuery(
+    queryTimeframeDays,
+    suspiciousTradeThreshold
+  )
 
   const {
     data: candidateData,
@@ -59,29 +62,16 @@ export const CandidateUsersPanel = ({
             record !== null && typeof record === "object"
         )
       : []
-    const counts = new Map<string, number>()
-
-    records.forEach((record) => {
-      const email = getStringValue(record.email).trim().toLowerCase()
-      if (!email) {
-        return
-      }
-
-      const amount = getNumericValue(record.amount)
-      if (amount > suspiciousTradeThreshold) {
-        counts.set(email, (counts.get(email) ?? 0) + 1)
-      }
-    })
-
-    return Array.from(counts.entries())
-      .map(([email, suspiciousTradeCount], index) => ({
-        id: `${email}-${index}`,
-        email,
-        suspiciousTradeCount
+    return records
+      .map((record) => ({
+        id: getStringValue(record.email).trim().toLowerCase(),
+        email: getStringValue(record.email).trim().toLowerCase(),
+        suspiciousTradeCount: getNumericValue(record.suspiciousTradeCount)
       }))
+      .filter((record) => Boolean(record.email))
       .sort((a, b) => b.suspiciousTradeCount - a.suspiciousTradeCount)
       .slice(0, 20)
-  }, [candidateData?.records, suspiciousTradeThreshold])
+  }, [candidateData?.records])
 
   const candidateExampleEmail = candidateUsers[0]?.email ?? ""
   const [copyMessage, setCopyMessage] = useState("")
