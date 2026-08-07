@@ -1,4 +1,5 @@
 import React from "react"
+import { openDocument } from "@dynatrace-sdk/navigation"
 import { useListDocuments } from "@dynatrace-sdk/react-hooks"
 import { Chip, MessageContainer, Skeleton } from "@dynatrace/strato-components/content"
 import { Flex, Surface } from "@dynatrace/strato-components/layouts"
@@ -6,9 +7,6 @@ import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
 
 const EASYTRADE_DASHBOARDS_FILTER =
   "type = 'dashboard' and name contains 'EasyTrade'"
-
-const getDashboardLink = (documentId: string) =>
-  `/ui/apps/dynatrace.dashboards/dashboard/${encodeURIComponent(documentId)}`
 
 const formatLastModified = (value: Date) =>
   new Intl.DateTimeFormat("en-US", {
@@ -90,17 +88,22 @@ export const EasyTradeDashboardsPanel = () => {
             {dashboards.map((dashboard) => (
               <Surface
                 aria-label={`Open dashboard ${dashboard.name}`}
-                as="a"
                 elevation="flat"
-                href={getDashboardLink(dashboard.id)}
                 key={dashboard.id}
+                onClick={() => openDocument(dashboard.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault()
+                    openDocument(dashboard.id)
+                  }
+                }}
                 padding={16}
+                role="button"
                 style={{
-                  color: "inherit",
                   cursor: "pointer",
-                  minHeight: 144,
-                  textDecoration: "none"
-                }}>
+                  minHeight: 144
+                }}
+                tabIndex={0}>
                 <Flex flexDirection="column" gap={8}>
                   <Chip color="primary" variant="accent" size="condensed">
                     Dashboard
