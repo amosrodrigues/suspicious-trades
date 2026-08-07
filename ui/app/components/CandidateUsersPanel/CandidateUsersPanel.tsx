@@ -2,11 +2,25 @@ import React, { useMemo, useState } from "react"
 import { useDql } from "@dynatrace-sdk/react-hooks"
 import { Button } from "@dynatrace/strato-components/buttons"
 import { MessageContainer } from "@dynatrace/strato-components/content"
-import { DataTable } from "@dynatrace/strato-components/tables"
+import {
+  DataTable,
+  DataTablePagination,
+  type DataTableColumnDef
+} from "@dynatrace/strato-components/tables"
 import { Flex, Surface } from "@dynatrace/strato-components/layouts"
 import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
-import { formatCurrency, paddedCell } from "../../utils/formatters"
+import {
+  formatCurrency,
+  getNumericValue,
+  getStringValue,
+  paddedCell
+} from "../../utils/formatters"
 import { buildCandidateUsersQuery } from "../../utils/dql-queries"
+
+type CandidateQueryRecord = {
+  email?: string
+  amount?: number | string
+}
 
 type CandidateUserRow = {
   id: string
@@ -27,42 +41,47 @@ export const CandidateUsersPanel = ({
 }: CandidateUsersPanelProps) => {
   const [showCandidateUsers, setShowCandidateUsers] = useState(false)
 
-  const candidateQuery = showCandidateUsers
-    ? buildCandidateUsersQuery(queryTimeframeDays, suspiciousTradeThreshold)
-    : "fetch bizevents | limit 0"
+  const candidateQuery = buildCandidateUsersQuery(queryTimeframeDays)
 
   const {
     data: candidateData,
     error: candidateError,
     isLoading: isCandidateLoading
-  } = useDql({ query: candidateQuery, maxResultRecords: 1000 })
+  } = useDql<CandidateQueryRecord>(
+    { query: candidateQuery, maxResultRecords: 5000 },
+    { enabled: showCandidateUsers }
+  )
 
   const candidateUsers = useMemo<CandidateUserRow[]>(() => {
     const records = Array.isArray(candidateData?.records)
-      ? candidateData.records
+      ? candidateData.records.filter(
+          (record): record is CandidateQueryRecord =>
+            record !== null && typeof record === "object"
+        )
       : []
     const counts = new Map<string, number>()
 
-    records.forEach((record: Record<string, unknown>) => {
-      const rawEmail =
-        typeof record.email === "string"
-          ? record.email.trim().toLowerCase()
-          : ""
-      if (!rawEmail) {
+    records.forEach((record) => {
+      const email = getStringValue(record.email).trim().toLowerCase()
+      if (!email) {
         return
       }
-      counts.set(rawEmail, (counts.get(rawEmail) ?? 0) + 1)
+
+      const amount = getNumericValue(record.amount)
+      if (amount > suspiciousTradeThreshold) {
+        counts.set(email, (counts.get(email) ?? 0) + 1)
+      }
     })
 
     return Array.from(counts.entries())
-      .map(([emailValue, count]) => ({
-        id: `${emailValue}-${count}`,
-        email: emailValue,
-        suspiciousTradeCount: count
+      .map(([email, suspiciousTradeCount], index) => ({
+        id: `${email}-${index}`,
+        email,
+        suspiciousTradeCount
       }))
       .sort((a, b) => b.suspiciousTradeCount - a.suspiciousTradeCount)
       .slice(0, 20)
-  }, [candidateData?.records])
+  }, [candidateData?.records, suspiciousTradeThreshold])
 
   const candidateExampleEmail = candidateUsers[0]?.email ?? ""
   const [copyMessage, setCopyMessage] = useState("")
@@ -81,6 +100,35 @@ export const CandidateUsersPanel = ({
       window.setTimeout(() => setCopyMessage(""), 2000)
     }
   }
+
+  const columns = useMemo<DataTableColumnDef<CandidateUserRow>[]>(
+    () => [
+      {
+        id: "email",
+        header: "User Email",
+        accessor: "email",
+        width: "content",
+        cell: ({ value }) => (
+          <Button
+            type="button"
+            variant="default"
+            color="primary"
+            onClick={() => onSearch(String(value ?? ""))}>
+            {String(value ?? "")}
+          </Button>
+        )
+      },
+      {
+        id: "count",
+        header: "Suspicious Trades",
+        accessor: "suspiciousTradeCount",
+        width: "content",
+        sortType: "number",
+        cell: ({ value }) => paddedCell(value)
+      }
+    ],
+    [onSearch]
+  )
 
   return (
     <Surface elevation="raised" padding={24} style={{ borderRadius: 18 }}>
@@ -154,43 +202,22 @@ export const CandidateUsersPanel = ({
               </MessageContainer>
             )}
 
-            <DataTable
-              data={candidateUsers}
-              columns={[
-                {
-                  id: "email",
-                  header: "User Email",
-                  accessor: "email",
-                  width: "content",
-                  cell: ({ value }) => (
-                    <Button
-                      type="button"
-                      variant="default"
-                      color="primary"
-                      onClick={() => onSearch(String(value ?? ""))}>
-                      {String(value ?? "")}
-                    </Button>
-                  )
-                },
-                {
-                  id: "count",
-                  header: "Suspicious Trades",
-                  accessor: "suspiciousTradeCount",
-                  width: "content",
-                  sortType: "number",
-                  cell: ({ value }) => paddedCell(value)
-                }
-              ]}
-              fullWidth
-              sortable>
-              <DataTable.EmptyState>
-                No suspicious user candidates found.
-              </DataTable.EmptyState>
-              <DataTable.Pagination
-                defaultPageSize={5}
-                pageSizeOptions={[5, 10, 20]}
-              />
-            </DataTable>
+            <div style={{ height: 360 }}>
+              <DataTable
+                data={candidateUsers}
+                columns={columns}
+                fullWidth
+                fullHeight
+                sortable>
+                <DataTable.EmptyState>
+                  No suspicious user candidates found.
+                </DataTable.EmptyState>
+                <DataTablePagination
+                  defaultPageSize={5}
+                  pageSizeOptions={[5, 10, 20]}
+                />
+              </DataTable>
+            </div>
           </>
         )}
       </Flex>

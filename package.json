@@ -12,7 +12,8 @@
     "update": "dt-app update",
     "info": "dt-app info",
     "help": "dt-app help",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc -p ui/tsconfig.json --noEmit"
   },
   "engines": {
     "node": ">=16.13.0"
@@ -26,12 +27,12 @@
     "@dynatrace-sdk/navigation": "^2.2.1",
     "@dynatrace-sdk/react-hooks": "^1.14.1",
     "@dynatrace-sdk/user-preferences": "^1.1.4",
-    "@dynatrace/strato-components": "^3.9.0",
+    "@dynatrace/strato-components": "^3.10.4",
     "@dynatrace/strato-design-tokens": "^1.5.1",
     "@dynatrace/strato-icons": "^2.3.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-intl": "6.6.2",
+    "react-is": "^18.3.1",
     "react-router-dom": "^6.22.2"
   },
   "devDependencies": {

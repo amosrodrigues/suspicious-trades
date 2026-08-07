@@ -12,21 +12,63 @@ import { CandidateUsersPanel } from "../components/CandidateUsersPanel/Candidate
 const SUSPICIOUS_TRADE_THRESHOLD = 1000
 const QUERY_TIMEFRAME_DAYS = 30
 
+export type TransactionQueryRecord = {
+  [key: string]: unknown
+  timestamp?: string
+  eventType?: string
+  "event.type"?: string
+  event_type?: string
+  amount?: number | string
+  event_amount?: number | string
+  currency?: string
+  email?: string
+  cardType?: string
+  cardNumber?: string
+  name?: string
+  address?: string
+  "browser.name"?: string
+  "browser.version"?: string
+  "browser.user_agent"?: string
+  "os.name"?: string
+  "device.type"?: string
+  "client.ip"?: string
+  "geo.city.name"?: string
+  "geo.country.name"?: string
+  accountId?: number | string
+  eventId?: string
+  "event.id"?: string
+}
+
 export const Home = () => {
   const [submittedEmail, setSubmittedEmail] = useState("")
 
-  const activeQuery = submittedEmail
-    ? buildUserQuery(submittedEmail, QUERY_TIMEFRAME_DAYS)
-    : "fetch bizevents | limit 0"
-  const { data, error, isLoading } = useDql({ query: activeQuery })
+  const activeQuery = buildUserQuery(submittedEmail, QUERY_TIMEFRAME_DAYS)
+  const { data, error, isLoading, forceRefetch } =
+    useDql<TransactionQueryRecord>(
+      { query: activeQuery, maxResultRecords: 5000 },
+      {
+        enabled: Boolean(submittedEmail)
+      }
+    )
 
   const handleSearch = (email: string) => {
-    setSubmittedEmail(email)
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
+      return
+    }
+
+    if (normalizedEmail === submittedEmail) {
+      void forceRefetch()
+      return
+    }
+
+    setSubmittedEmail(normalizedEmail)
   }
 
   return (
     <Flex flexDirection="column" gap={24} padding={32}>
       <UserSearchPanel
+        suspiciousTradeThreshold={SUSPICIOUS_TRADE_THRESHOLD}
         queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
         onSearch={handleSearch}
       />

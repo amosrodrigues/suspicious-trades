@@ -7,11 +7,13 @@
     "description": "A suspicious trade verification app for EasyTrade business events",
     "id": "my.suspicious.trades",
     "scopes": [
-      { "name": "storage:logs:read", "comment": "default template" },
-      { "name": "storage:buckets:read", "comment": "default template" },
       {
         "name": "storage:bizevents:read",
         "comment": "read business events for suspicious trade analysis"
+      },
+      {
+        "name": "storage:buckets:read",
+        "comment": "allow Grail query access to the bizevents bucket"
       }
     ]
   }

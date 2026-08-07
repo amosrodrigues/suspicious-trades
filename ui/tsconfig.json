@@ -6,7 +6,7 @@
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "importHelpers": false /* Import emit helpers from 'tslib'. */,
     "jsx": "react",
     "lib": ["DOM", "DOM.Iterable", "esnext"],

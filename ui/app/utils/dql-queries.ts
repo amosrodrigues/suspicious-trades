@@ -1,24 +1,26 @@
 // ui/app/utils/dql-queries.ts
 
 export const buildUserQuery = (email: string, timeframeDays: number) => {
-  const safeEmail = JSON.stringify(email.toLowerCase())
+  const normalizedEmail = email.trim().toLowerCase()
+
+  if (!normalizedEmail) {
+    return "fetch bizevents | limit 0"
+  }
+
+  const safeEmail = JSON.stringify(normalizedEmail)
 
   return `
     fetch bizevents, from: now() - ${timeframeDays}d
     | filter event.type == "com.easytrade.deposit.start" or event.type == "com.easytrade.withdraw.start"
     | filter lower(email) == ${safeEmail}
-    | fields timestamp, eventType=event.type, eventId=event.id, amount, email, accountId, cardType
     | sort timestamp desc
   `
 }
 
-export const buildCandidateUsersQuery = (
-  timeframeDays: number,
-  suspiciousTradeThreshold: number
-) => `
+export const buildCandidateUsersQuery = (timeframeDays: number) => `
   fetch bizevents, from: now() - ${timeframeDays}d
   | filter event.type == "com.easytrade.deposit.start" or event.type == "com.easytrade.withdraw.start"
-  | filter amount > ${suspiciousTradeThreshold}
-  | fields email
-  | limit 1000
+  | filter isNotNull(email)
+  | fields email, amount
+  | limit 5000
 `
