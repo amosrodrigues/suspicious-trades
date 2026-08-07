@@ -1,12 +1,14 @@
 import React from "react"
 import { useListDocuments } from "@dynatrace-sdk/react-hooks"
-import { getDocumentLink } from "@dynatrace-sdk/navigation"
 import { Chip, MessageContainer, Skeleton } from "@dynatrace/strato-components/content"
 import { Flex, Surface } from "@dynatrace/strato-components/layouts"
 import { Heading, Paragraph } from "@dynatrace/strato-components/typography"
 
 const EASYTRADE_DASHBOARDS_FILTER =
   "type = 'dashboard' and name contains 'EasyTrade'"
+
+const getDashboardLink = (documentId: string) =>
+  `/ui/apps/dynatrace.dashboards/dashboard/${encodeURIComponent(documentId)}`
 
 const formatLastModified = (value: Date) =>
   new Intl.DateTimeFormat("en-US", {
@@ -90,7 +92,7 @@ export const EasyTradeDashboardsPanel = () => {
                 aria-label={`Open dashboard ${dashboard.name}`}
                 as="a"
                 elevation="flat"
-                href={getDocumentLink(dashboard.id)}
+                href={getDashboardLink(dashboard.id)}
                 key={dashboard.id}
                 padding={16}
                 style={{
