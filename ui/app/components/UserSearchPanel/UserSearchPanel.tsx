@@ -40,7 +40,7 @@ export const UserSearchPanel = ({
 
       <form onSubmit={handleSearch}>
         <Flex gap={12} alignItems="center" flexWrap="wrap" paddingTop={20}>
-          <div style={{ minWidth: 320, flex: 1 }}>
+          <div style={{ flex: "0 1 420px", maxWidth: 420, width: "100%" }}>
             <TextInput
               type="email"
               value={email}
