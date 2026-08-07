@@ -8,6 +8,7 @@ import { UserSearchPanel } from "../components/UserSearchPanel/UserSearchPanel"
 import { TransactionsTablePanel } from "../components/TransactionsTablePanel/TransactionsTablePanel"
 import { CandidateUsersPanel } from "../components/CandidateUsersPanel/CandidateUsersPanel"
 import { TradesOverviewPanel } from "../components/TradesOverviewPanel/TradesOverviewPanel"
+import { EasyTradeDashboardsPanel } from "../components/EasyTradeDashboardsPanel/EasyTradeDashboardsPanel"
 
 // CONFIGURATION CONSTANTS
 const SUSPICIOUS_TRADE_THRESHOLD = 1000
@@ -95,6 +96,8 @@ export const Home = () => {
         queryTimeframeDays={QUERY_TIMEFRAME_DAYS}
         onSearch={handleSearch}
       />
+
+      {!submittedEmail && <EasyTradeDashboardsPanel />}
     </Flex>
   )
 }
